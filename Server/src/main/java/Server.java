@@ -1,3 +1,5 @@
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +16,8 @@ public class Server {
                 Socket socket = server.accept();
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
 
                 new Thread(() -> {
                     String request = null;
@@ -25,6 +29,9 @@ public class Server {
                         writer.write(response);
                         writer.newLine();
                         writer.flush();
+
+//                        JSONObject json = new JSONObject(reader.readLine());
+//                        System.out.println(json);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
