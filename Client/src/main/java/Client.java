@@ -1,3 +1,5 @@
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -12,27 +14,26 @@ public class Client {
                 ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
                 Scanner scan = new Scanner(System.in)
         ) {
-            System.out.println("Connected to server.");
-            String request = "Test request";
-            writer.write(request);
-            writer.newLine();
-            writer.flush();
+            while (true) {
+                JSONObject jsonToSend = new JSONObject();
+                String inputLine;
+                System.out.println("Введите арифметическое выражение: ");
+                inputLine = scan.nextLine();
 
-//            JSONObject jsonToSend = new JSONObject();
-//            String inputLine;
-//            System.out.println("Введите арифметическое выраважение: ");
-//            inputLine = scan.nextLine();
-//
-//            jsonToSend.put(Integer.toString(1), "x");
-//            jsonToSend.put(Integer.toString(2), "+");
-//            jsonToSend.put(Integer.toString(3), "y");
-//
-//            writer.write(jsonToSend.toString());
-//            writer.newLine();
-//            writer.flush();
+                jsonToSend.put(Integer.toString(1), inputLine);
 
-            String response = reader.readLine();
-            System.out.println("Response: " + response);
+                writer.write(jsonToSend.toString());
+                writer.newLine();
+                writer.flush();
+
+                String source = reader.readLine();
+                JSONObject obj = new JSONObject(source);
+                if (obj.has("error")) {
+                    System.out.println(obj.getString("error"));
+                } else {
+                    System.out.println(Double.parseDouble(obj.getString("result")));
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

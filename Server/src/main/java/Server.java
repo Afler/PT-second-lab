@@ -20,23 +20,37 @@ public class Server {
                 ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
 
                 new Thread(() -> {
-                    String request = null;
+                    //Parser parser = new Parser();
+                    //Calc parser = new Calc();
                     try {
-                        request = reader.readLine();
-                        System.out.println("Request: " + request);
-                        String response = "Hello from server: " + request.length();
-                        System.out.println("Response: " + response);
-                        writer.write(response);
-                        writer.newLine();
-                        writer.flush();
-
-//                        JSONObject json = new JSONObject(reader.readLine());
-//                        System.out.println(json);
+                        while (true) {
+                            String source = reader.readLine();
+                            try {
+                                JSONObject json = new JSONObject(source);
+                                if (source.isEmpty()) {
+                                    throw new ParserException("Empty string input");
+                                }
+                                System.out.println(json);
+                                String exp = json.getString("1");
+                                //double result = parser.evaluate(exp);
+                                double result = Calc.evaluate(exp);
+                                System.out.println(result);
+                                json.put("result", Double.toString(result));
+                                writer.write(json.toString());
+                                writer.newLine();
+                                writer.flush();
+                            } catch (ParserException e) {
+                                JSONObject error = new JSONObject();
+                                error.put("error", "Incorrect input");
+                                writer.write(error.toString());
+                                writer.newLine();
+                                writer.flush();
+                            }
+                        }
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
                     }
                 }).start();
-
             }
         } catch (IOException ioException) {
             ioException.printStackTrace();

@@ -43,7 +43,7 @@ public class SyntaxAnalyzer {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         Parser myParser = new Parser();
 
-        double result = myParser.evaluate("3 * 2 + 3");
+        double result = myParser.evaluate("3^(2+1) * (-2 + 3/2)");
         System.out.println(result);
 
 //        for(;;)
