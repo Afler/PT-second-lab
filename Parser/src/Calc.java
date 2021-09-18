@@ -1,5 +1,3 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.StringTokenizer;
 
@@ -150,7 +148,6 @@ class Calc {
             try {
 
                 sTmp = st.nextToken().trim();
-                //String tmp=String.valueOf(sTmp.charAt(0));
 
 
                 if ((1 == sTmp.length() && isOp(sTmp)) || isFunction(sTmp)) {
@@ -192,9 +189,6 @@ class Calc {
                                 throw new Exception("Недопустимая операция " + sTmp);
                         }
                         stack.push(dA);
-                        //if (stack.size() < 2) {
-                        //    throw new Exception("Неверное количество данных в стеке для операции " + sTmp);
-                        //}
                     }
                 } else {
                     dA = Double.parseDouble(sTmp);
@@ -215,32 +209,6 @@ class Calc {
         return stack.pop();
     }
 
-    public static void main(String[] args) {
-        BufferedReader d = new BufferedReader(new InputStreamReader(System.in));
-        String sIn = "";
-
-
-        System.out.println("Введте выражение для расчета. Поддерживаются цифры, операции +,-,*,/,^,% и приоритеты в виде скобок ( и ):");
-        try {
-//            Calc test = new Calc();
-//            String sIn = d.readLine();
-            evaluate(sIn);
-            //System.out.println(test.calculate(test.opn(sIn)));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-            /*test.opn(sIn);
-            System.out.println("Operator Stack: "+test.sStack);
-        System.out.println("Output: "+test.sbOut);*/
-
-        //sIn = Calc.opn(sIn);
-        //System.out.println(Calc.calculate(sIn));
-
-        //System.out.println(e.getMessage());
-
-
-    }
     public static double evaluate(String sIn) throws ParserException {
         try {
             Calc test = new Calc();

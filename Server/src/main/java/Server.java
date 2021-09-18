@@ -20,8 +20,6 @@ public class Server {
                 ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
 
                 new Thread(() -> {
-                    //Parser parser = new Parser();
-                    //Calc parser = new Calc();
                     try {
                         while (true) {
                             String source = reader.readLine();
