@@ -6,34 +6,33 @@ class Calc {
     private final String OPERATORS = "+-*/^%";
     private final String[] FUNCTIONS = {"sin", "cos", "tan"};
     private final String SEPARATOR = ",";
-    //public StringBuilder sbStack =null;
     /* temporary stack that holds operators, functions and brackets */
     public Stack<String> sStack = new Stack<>();
     public StringBuilder sbOut = null;
 
 
     /**
-     * Преобразовать строку в обратную польскую нотацию
+     * Преобразует строку в обратную польскую нотацию
      *
-     * @param sIn Входная строка
+     * @param expr Входная строка
      * @return Выходная строка в обратной польской нотации
      */
-    public String opn(String sIn) throws Exception {
+    public String getReversePolishNotation(String expr) throws Exception {
 
         sbOut = new StringBuilder("");
 
-        /* splitting input string into tokens */
-        StringTokenizer stringTokenizer = new StringTokenizer(sIn,
+        /* Разбиение входной строик на токены */
+        StringTokenizer stringTokenizer = new StringTokenizer(expr,
                 OPERATORS + " ()", true);
 
         String cTmp;
 
         while (stringTokenizer.hasMoreTokens()) {
             String token = stringTokenizer.nextToken();
-            if (isOp(token)) {
+            if (isOperator(token)) {
 
                 while (!sStack.empty()) {
-                    if (isOp(sStack.lastElement()) && (opPrior(token) <= opPrior(sStack.lastElement()))) {
+                    if (isOperator(sStack.lastElement()) && (getOperatorPrior(token) <= getOperatorPrior(sStack.lastElement()))) {
                         sbOut.append(" ").append(sStack.pop()).append(" ");
                     } else {
                         sbOut.append(" ");
@@ -84,16 +83,11 @@ class Calc {
     /**
      * Функция проверяет, является ли текущий символ оператором
      */
-    private static boolean isOp(String c) {
-        switch (c) {
-            case "-":
-            case "+":
-            case "*":
-            case "/":
-            case "^":
-                return true;
-        }
-        return false;
+    private static boolean isOperator(String c) {
+        return switch (c) {
+            case "-", "+", "*", "/", "^" -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -102,16 +96,13 @@ class Calc {
      * @param op char
      * @return byte
      */
-    private static byte opPrior(String op) {
-        switch (op) {
-            case "^":
-                return 3;
-            case "*":
-            case "/":
-            case "%":
-                return 2;
-        }
-        return 1; // Тут остается + и -
+    private static byte getOperatorPrior(String op) {
+        return switch (op) {
+            case "^" -> (byte) 3;
+            case "*", "/", "%" -> (byte) 2;
+            default -> (byte) 1;
+        };
+        // Тут остается + и -
     }
 
     /**
@@ -135,58 +126,43 @@ class Calc {
     /**
      * Считает выражение, записанное в обратной польской нотации
      *
-     * @param sIn
+     * @param expr Expression to compute
      * @return double result
      */
 
-    public double calculate(String sIn) throws Exception {
+    public double calculate(String expr) throws Exception {
         double dA = 0, dB = 0;
         String sTmp;
         Deque<Double> stack = new ArrayDeque<Double>();
-        StringTokenizer st = new StringTokenizer(sIn);
+        StringTokenizer st = new StringTokenizer(expr);
         while (st.hasMoreTokens()) {
             try {
 
                 sTmp = st.nextToken().trim();
 
 
-                if ((1 == sTmp.length() && isOp(sTmp)) || isFunction(sTmp)) {
+                if ((1 == sTmp.length() && isOperator(sTmp)) || isFunction(sTmp)) {
                     if (isFunction(sTmp)) {
                         dA = stack.pop();
-                        switch (sTmp) {
-                            case "sin":
-                                dA = Math.sin(dA);
-                                break;
-                            default:
-                                throw new Exception("Недопустимая операция " + sTmp);
+                        if ("sin".equals(sTmp)) {
+                            dA = Math.sin(dA);
+                        } else {
+                            throw new Exception("Недопустимая операция " + sTmp);
                         }
                         stack.push(dA);
                     }
 
-                    if (1 == sTmp.length() && isOp(sTmp)) {
+                    if (1 == sTmp.length() && isOperator(sTmp)) {
                         dB = stack.pop();
                         dA = stack.pop();
                         switch (sTmp) {
-                            case "+":
-                                dA += dB;
-                                break;
-                            case "-":
-                                dA -= dB;
-                                break;
-                            case "/":
-                                dA /= dB;
-                                break;
-                            case "*":
-                                dA *= dB;
-                                break;
-                            case "%":
-                                dA %= dB;
-                                break;
-                            case "^":
-                                dA = Math.pow(dA, dB);
-                                break;
-                            default:
-                                throw new Exception("Недопустимая операция " + sTmp);
+                            case "+" -> dA += dB;
+                            case "-" -> dA -= dB;
+                            case "/" -> dA /= dB;
+                            case "*" -> dA *= dB;
+                            case "%" -> dA %= dB;
+                            case "^" -> dA = Math.pow(dA, dB);
+                            default -> throw new Exception("Недопустимая операция " + sTmp);
                         }
                         stack.push(dA);
                     }
@@ -209,10 +185,10 @@ class Calc {
         return stack.pop();
     }
 
-    public static double evaluate(String sIn) throws ParserException {
+    public static double evaluate(String expr) throws ParserException {
         try {
-            Calc test = new Calc();
-            return test.calculate(test.opn(sIn));
+            Calc calc = new Calc();
+            return calc.calculate(calc.getReversePolishNotation(expr));
         } catch (Exception e) {
             throw new ParserException("error");
         }

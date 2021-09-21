@@ -6,8 +6,15 @@ import java.net.Socket;
 
 public class Server {
     public static void main(String[] args) {
+        String expr = "8+2*5/(1+3*2-4)";
+        try {
+            double result = Calc.evaluate(expr);
+            System.out.println(result);
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
 
-        try (ServerSocket server = new ServerSocket(8000)) {
+        /*try (ServerSocket server = new ServerSocket(8000)) {
 
             System.out.println("Server started.");
 
@@ -49,8 +56,8 @@ public class Server {
                     }
                 }).start();
             }
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
     }
 }
