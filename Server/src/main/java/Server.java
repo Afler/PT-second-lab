@@ -19,8 +19,19 @@ public class Server {
                     try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                          BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                         JSONObject json = new JSONObject();
-                        int i = 1;
+                        int i;
+                        try {
+                            File file = new File("Server/src/saveStorage/test.txt");
+                            json = Server.loadFile(json, file);
+                            if (json.has("finalIndex")) {
+                                i = json.getInt("finalIndex") + 1;
+                            } else
+                                throw new NullPointerException();
+                        } catch(NullPointerException e) {
+                            i = 1;
+                        }
                         do {
+                            Server.writeJSON(writer, json);
                             try {
                                 json = new JSONObject(reader.readLine());
                                 if (json.getString("exp" + i).isEmpty()) {
@@ -35,9 +46,11 @@ public class Server {
                             } catch (ParserException e) {
                                 json.put("error" + i, "Некорректный ввод");
                                 Server.writeJSON(writer, json);
-                                json = new JSONObject(reader.readLine());
                             }
+                            json = new JSONObject(reader.readLine());
+                            Server.saveFile(json, i);
                         } while (json.getString("continueCheck" + i++).equals("Y"));
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -54,4 +67,28 @@ public class Server {
         writer.flush();
     }
 
+    private static void saveFile(JSONObject json, int i) throws IOException {
+        FileWriter saveFile = new FileWriter("Server/src/saveStorage/test.txt");
+        try {
+            json.put("finalIndex", i);
+            saveFile.write(json.toString());
+            System.out.println("Save file complete");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            saveFile.flush();
+            saveFile.close();
+        }
+    }
+
+    private static JSONObject loadFile(JSONObject json, File file) throws IOException {
+        try (FileReader loadFile = new FileReader(file)) {
+            BufferedReader reader = new BufferedReader(loadFile);
+            json = new JSONObject(reader.readLine());
+            return json;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return json;
+        }
+    }
 }

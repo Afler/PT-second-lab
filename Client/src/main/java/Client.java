@@ -12,9 +12,12 @@ public class Client {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 Scanner scan = new Scanner(System.in)
         ) {
-            JSONObject json = new JSONObject();
+            JSONObject json = new JSONObject(reader.readLine());
             int i = 1;
             do {
+                if (json.has("finalIndex")) {
+                    i = json.getInt("finalIndex") + 1;
+                }
                 System.out.println("Введите арифметическое выражение: ");
                 json.put("exp" + i, scan.nextLine());
                 Client.writeJSON(writer, json);
