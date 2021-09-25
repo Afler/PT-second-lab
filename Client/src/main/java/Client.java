@@ -12,36 +12,34 @@ public class Client {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 Scanner scan = new Scanner(System.in)
         ) {
-            String inputLine;
+            JSONObject json = new JSONObject();
+            int i = 1;
             do {
-                JSONObject jsonRequest = new JSONObject();
                 System.out.println("Введите арифметическое выражение: ");
-                inputLine = scan.nextLine();
-
-                jsonRequest.put(Integer.toString(1), inputLine);
-
-                Client.writeString(writer, jsonRequest.toString());
+                json.put("exp" + i, scan.nextLine());
+                Client.writeJSON(writer, json);
 
                 String source = reader.readLine();
                 JSONObject jsonResponse = new JSONObject(source);
-                if (jsonResponse.has("error")) {
+                if (jsonResponse.has("error" + i)) {
                     System.out.println(jsonResponse.getString("error"));
                 } else {
-                    System.out.println(Double.parseDouble(jsonResponse.getString("result")));
+                    System.out.println(Double.parseDouble(jsonResponse.getString("result" + i)));
                 }
                 do {
                     System.out.println("Продолжить? (Y/N)");
-                    inputLine = scan.nextLine();
-                } while (!(inputLine.equals("Y") || inputLine.equals("N")));
-                Client.writeString(writer, inputLine);
-            } while (inputLine.equals("Y"));
+                    json.put("continueCheck" + i, scan.nextLine());
+                } while (!(json.get("continueCheck" + i).equals("Y") ||
+                        json.get("continueCheck" + i).equals("N")));
+                Client.writeJSON(writer, json);
+            } while (json.get("continueCheck" + i++).equals("Y"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void writeString(BufferedWriter writer, String inputLine) throws IOException {
-        writer.write(inputLine);
+    private static void writeJSON(BufferedWriter writer, JSONObject json) throws IOException {
+        writer.write(json.toString());
         writer.newLine();
         writer.flush();
     }

@@ -18,49 +18,40 @@ public class Server {
                 new Thread(() -> {
                     try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                          BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-
-                        String stringFromClient;
+                        JSONObject json = new JSONObject();
+                        int i = 1;
                         do {
-                            stringFromClient = reader.readLine();
                             try {
-                                JSONObject json = new JSONObject(stringFromClient);
-                                if (stringFromClient.isEmpty()) {
+                                json.put("exp" + i, reader.readLine());
+                                if (json.getString("exp" + i).isEmpty()) {
                                     throw new ParserException("Пустая строка");
                                 }
                                 System.out.println(json);
-                                String exp = json.getString("1");
+                                String exp = json.getString("exp" + i);
                                 double result = Calc.evaluate(exp);
                                 System.out.println(result);
-                                json.put("result", Double.toString(result));
-                                Server.writeString(writer, json);
-                                stringFromClient = reader.readLine();
+                                json.put("result" + i, Double.toString(result));
+                                Server.writeJSON(writer, json);
                             } catch (ParserException e) {
-                                JSONObject error = new JSONObject();
-                                error.put("error", "Некорректный ввод");
-                                Server.writeString(writer, error);
+                                json.put("error" + i, "Некорректный ввод");
+                                Server.writeJSON(writer, json);
+                                json = new JSONObject(reader.readLine());
                             }
-                        } while (stringFromClient.equals("Y"));
-
+                        } while (json.getString("continueCheck" + i++).equals("Y"));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }).start();
-
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void writeString(BufferedWriter writer, JSONObject json) throws IOException {
+    private static void writeJSON(BufferedWriter writer, JSONObject json) throws IOException {
         writer.write(json.toString());
         writer.newLine();
         writer.flush();
     }
 
-    private static void writeString(BufferedWriter writer, String string) throws IOException {
-        writer.write(string);
-        writer.newLine();
-        writer.flush();
-    }
 }
