@@ -16,7 +16,8 @@ public class Server {
                         JSONObject json = new JSONObject();
                         int i;
                         try {
-                            File file = new File("Server/src/saveStorage/test.txt");
+                            File file = new File("Server/src/saveStorage/test.json");
+                            //File file = new File("Server/src/saveStorage/test.txt");
                             json = Server.loadFile(json, file);
                             if (json.has("finalIndex")) {
                                 i = json.getInt("finalIndex") + 1;
@@ -65,7 +66,8 @@ public class Server {
     }
 
     private static void saveFile(JSONObject json, int i) throws IOException {
-        FileWriter saveFile = new FileWriter("Server/src/saveStorage/test.txt");
+        FileWriter saveFile = new FileWriter("Server/src/saveStorage/test.json");
+        //FileWriter saveFile = new FileWriter("Server/src/saveStorage/test.txt");
         try {
             json.put("finalIndex", i);
             saveFile.write(json.toString());
