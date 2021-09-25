@@ -6,15 +6,10 @@ import java.net.Socket;
 
 public class Server {
     public static void main(String[] args) {
-
         try (ServerSocket server = new ServerSocket(8000)) {
-
             System.out.println("Server started.");
-
             while (true) {
-
                 Socket socket = server.accept();
-
                 new Thread(() -> {
                     try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                          BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -27,10 +22,12 @@ public class Server {
                                 i = json.getInt("finalIndex") + 1;
                             } else
                                 throw new NullPointerException();
-                        } catch(NullPointerException e) {
+                        } catch (NullPointerException e) {
                             i = 1;
+                            json.put("finalIndex", i);
                         }
                         do {
+                            json.put("finalIndex", i);
                             Server.writeJSON(writer, json);
                             try {
                                 json = new JSONObject(reader.readLine());
