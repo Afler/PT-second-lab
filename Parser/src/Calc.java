@@ -60,7 +60,7 @@ class Calc {
                 }
 
                 sStack.remove(cTmp);
-                if (isFunction(sStack.lastElement())) {
+                if (!sStack.empty() && isFunction(sStack.lastElement())) {
                     sbOut.append(" ").append(sStack.lastElement()).append(" ");
                     sStack.remove(sStack.lastElement());
                 }

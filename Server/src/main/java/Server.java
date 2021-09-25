@@ -6,58 +6,61 @@ import java.net.Socket;
 
 public class Server {
     public static void main(String[] args) {
-        String expr = "8+2*5/(1+3*2-4)";
-        try {
-            double result = Calc.evaluate(expr);
-            System.out.println(result);
-        } catch (ParserException e) {
-            e.printStackTrace();
-        }
 
-        /*try (ServerSocket server = new ServerSocket(8000)) {
+        try (ServerSocket server = new ServerSocket(8000)) {
 
             System.out.println("Server started.");
 
             while (true) {
 
                 Socket socket = server.accept();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
 
                 new Thread(() -> {
-                    try {
-                        while (true) {
-                            String source = reader.readLine();
+                    try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+                        String stringFromClient;
+                        do {
+                            stringFromClient = reader.readLine();
                             try {
-                                JSONObject json = new JSONObject(source);
-                                if (source.isEmpty()) {
-                                    throw new ParserException("Empty string input");
+                                JSONObject json = new JSONObject(stringFromClient);
+                                if (stringFromClient.isEmpty()) {
+                                    throw new ParserException("Пустая строка");
                                 }
                                 System.out.println(json);
                                 String exp = json.getString("1");
                                 double result = Calc.evaluate(exp);
                                 System.out.println(result);
                                 json.put("result", Double.toString(result));
-                                writer.write(json.toString());
-                                writer.newLine();
-                                writer.flush();
+                                Server.writeString(writer, json);
+                                stringFromClient = reader.readLine();
                             } catch (ParserException e) {
                                 JSONObject error = new JSONObject();
-                                error.put("error", "Incorrect input");
-                                writer.write(error.toString());
-                                writer.newLine();
-                                writer.flush();
+                                error.put("error", "Некорректный ввод");
+                                Server.writeString(writer, error);
                             }
-                        }
+                        } while (stringFromClient.equals("Y"));
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }).start();
+
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
+    }
+
+    private static void writeString(BufferedWriter writer, JSONObject json) throws IOException {
+        writer.write(json.toString());
+        writer.newLine();
+        writer.flush();
+    }
+
+    private static void writeString(BufferedWriter writer, String string) throws IOException {
+        writer.write(string);
+        writer.newLine();
+        writer.flush();
     }
 }
