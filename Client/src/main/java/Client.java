@@ -20,11 +20,11 @@ public class Client {
                 Client.writeJSON(writer, json);
 
                 String source = reader.readLine();
-                JSONObject jsonResponse = new JSONObject(source);
-                if (jsonResponse.has("error" + i)) {
-                    System.out.println(jsonResponse.getString("error"));
+                json = new JSONObject(source);
+                if (json.has("error" + i)) {
+                    System.out.println(json.getString("error" + i));
                 } else {
-                    System.out.println(Double.parseDouble(jsonResponse.getString("result" + i)));
+                    System.out.println(Double.parseDouble(json.getString("result" + i)));
                 }
                 do {
                     System.out.println("Продолжить? (Y/N)");
@@ -32,7 +32,7 @@ public class Client {
                 } while (!(json.get("continueCheck" + i).equals("Y") ||
                         json.get("continueCheck" + i).equals("N")));
                 Client.writeJSON(writer, json);
-            } while (json.get("continueCheck" + i++).equals("Y"));
+            } while (json.getString("continueCheck" + i++).equals("Y"));
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -22,7 +22,7 @@ public class Server {
                         int i = 1;
                         do {
                             try {
-                                json.put("exp" + i, reader.readLine());
+                                json = new JSONObject(reader.readLine());
                                 if (json.getString("exp" + i).isEmpty()) {
                                     throw new ParserException("Пустая строка");
                                 }
