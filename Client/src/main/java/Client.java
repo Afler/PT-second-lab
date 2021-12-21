@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -18,17 +19,25 @@ public class Client {
             int i = 1;
 
             do {
+                Equation equation = new Equation();
                 json = Client.getJSON(reader);
                 if (json.has("lastIndex"))
                     i = json.getInt("lastIndex");
                 System.out.println("Введите арифметическое выражение: ");
-                json.put("exp" + i, scan.nextLine());
+                //json.put("exp" + i, scan.nextLine());
+                equation.setExpression(scan.nextLine());
+                Gson gson = new Gson();
+
+                json.put("eq", gson.toJson(equation));
                 Client.sendJSON(writer, json);
                 json = Client.getJSON(reader);
+                Equation recvEq = gson.fromJson(json.getString("eq"), Equation.class);
                 if (json.has("error" + i)) {
                     System.out.println(json.getString("error" + i));
                 } else {
-                    System.out.println(Double.parseDouble(json.getString("result" + i)));
+                    //Equation recvEq = (Equation) json.get("eq");
+                    equation.setResult(recvEq.getResult());
+                    System.out.println(Double.parseDouble(equation.getResult()));
                 }
                 do {
                     System.out.println("Продолжить? (Y/N)");

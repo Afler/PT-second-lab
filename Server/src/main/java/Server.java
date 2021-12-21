@@ -1,3 +1,5 @@
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -5,12 +7,14 @@ import org.json.JSONTokener;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Server {
     public static void main(String[] args) {
         try (ServerSocket server = new ServerSocket(8000)) {
             System.out.println("Server started.");
-
+            History history = new History();
+            history.setEquations(new ArrayList<>());
             while (true) {
                 Socket socket = server.accept();
 
@@ -30,23 +34,36 @@ public class Server {
                     else i = 1;
 
                     do {
-                        json.put("lastIndex", i);
+                        //json.put("lastIndex", i);
+                        history.setLastIndex(i);
                         Server.sendJSON(writer, json);
                         try {
                             json = Server.getJSON(reader);
-                            if (json.getString("exp" + i).isEmpty()) {
+                            Gson gson = new Gson();
+                            Equation recvEq = gson.fromJson(json.getString("eq"), Equation.class);
+                            //Equation recEq = json.getString("eq");
+                            if (recvEq.getExpression().isEmpty()) {
                                 throw new ParserException("Пустая строка");
                             }
-                            String exp = json.getString("exp" + i);
-                            double result = Calc.evaluate(exp);
+                            //String exp = json.getString("exp" + i);
+                            Equation equation = recvEq;
+                            double result = Calc.evaluate(equation.getExpression());
                             System.out.println(result);
-                            json.put("result" + i, Double.toString(result));
+                            //json.put("result" + i, Double.toString(result));
+                            //Equation equation = new Equation();
+                            //equation.setExpression(exp);
+                            equation.setResult(Double.toString(result));
+                            //json.put("eq" + i, equation);
+                            history.getEquations().add(equation);
+                            json.put("eq", gson.toJson(equation));
                             Server.sendJSON(writer, json);
                         } catch (ParserException e) {
                             json.put("error" + i, "Некорректный ввод");
+                            history.setError("Некорректный ввод");
                             Server.sendJSON(writer, json);
                         }
                         json = Server.getJSON(reader);
+                        json.put("history", history);
                         Server.saveJSONToFile(json, i);
                     } while (json.getString("continueCheck" + i++).equals("Y"));
                 }
@@ -73,8 +90,8 @@ public class Server {
 
     private static void saveJSONToFile(JSONObject json, int i) throws IOException {
         try (FileWriter saveFile = new FileWriter("Server/src/saveStorage/test.json")) {
-            json.put("lastIndex", i);
-            saveFile.write(json.toString());
+            //json.put("lastIndex", i);
+            saveFile.write(json.get("history").toString());
         }
     }
 
