@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "expressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "expression": {
+            "type": "string",
+            "required": true
+          },
+          "result": {
+            "type": "number",
+            "required": true
+          },
+          "error": {
+            "type": "number",
+            "required": true
+          },
+          "continueCheck": {
+            "type": "number",
+            "required": true
+          }
+        }
+      }
+    },
+    "lastIndex": {
+      "type": "integer",
+      "required": true
+    }
+  }
+}

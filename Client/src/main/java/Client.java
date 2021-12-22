@@ -1,7 +1,4 @@
-import com.google.gson.Gson;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,59 +8,43 @@ public class Client {
     public static void main(String[] args) {
         try (
                 Socket socket = new Socket("127.0.0.1", 8000);
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                BufferedWriter serverIn = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                BufferedReader serverOut = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 Scanner scan = new Scanner(System.in)
         ) {
-            JSONObject json;
-            int i = 1;
+            ObjectMapper objectMapper = new ObjectMapper();
+            String continueCheck;
 
+            Equation equation = new Equation();
             do {
-                Equation equation = new Equation();
-                json = Client.getJSON(reader);
-                if (json.has("lastIndex"))
-                    i = json.getInt("lastIndex");
-                System.out.println("Введите арифметическое выражение: ");
-                //json.put("exp" + i, scan.nextLine());
-                equation.setExpression(scan.nextLine());
-                Gson gson = new Gson();
 
-                json.put("eq", gson.toJson(equation));
-                Client.sendJSON(writer, json);
-                json = Client.getJSON(reader);
-                Equation recvEq = gson.fromJson(json.getString("eq"), Equation.class);
-                if (json.has("error" + i)) {
-                    System.out.println(json.getString("error" + i));
-                } else {
-                    //Equation recvEq = (Equation) json.get("eq");
-                    equation.setResult(recvEq.getResult());
-                    System.out.println(Double.parseDouble(equation.getResult()));
-                }
+                // Считать и отправить арифметическое выражение
+                System.out.println("Введите арифметическое выражение: ");
+                equation.setExpression(scan.nextLine());
+                serverIn.write(objectMapper.writeValueAsString(equation));
+                serverIn.write("\n");
+                serverIn.flush();
+
+                // Получить численный ответ и актуальный индекс
+                equation = objectMapper.readValue(serverOut.readLine(), Equation.class);
+                System.out.println(equation.getError());
+
                 do {
                     System.out.println("Продолжить? (Y/N)");
-                    json.put("continueCheck" + i, scan.nextLine());
-                } while (!(json.get("continueCheck" + i).equals("Y") ||
-                        json.get("continueCheck" + i).equals("N")));
-                Client.sendJSON(writer, json);
-            } while (json.get("continueCheck" + i).equals("Y"));
+                    continueCheck = scan.nextLine();
+                    equation.setContinueCheck(continueCheck);
+                } while (!(continueCheck.equals("Y") || continueCheck.equals("N")));
+
+                // Отправить информацию о продолжении
+                serverIn.write(objectMapper.writeValueAsString(equation));
+                serverIn.write("\n");
+                serverIn.flush();
+
+            } while (continueCheck.equals("Y"));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static JSONObject getJSON(BufferedReader reader) {
-        try {
-            JSONTokener jsonTokener = new JSONTokener(reader);
-            return new JSONObject(jsonTokener);
-        } catch (JSONException e) {
-            return new JSONObject();
-        }
-    }
-
-    private static void sendJSON(BufferedWriter writer, JSONObject json) throws IOException {
-        writer.write(json.toString());
-        writer.newLine();
-        writer.flush();
-    }
 }

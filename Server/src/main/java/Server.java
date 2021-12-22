@@ -1,71 +1,68 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class Server {
+
+    private static final String JSON_FILE_PATH = "Server/src/saveStorage/test.json";
+
     public static void main(String[] args) {
         try (ServerSocket server = new ServerSocket(8000)) {
             System.out.println("Server started.");
-            History history = new History();
-            history.setEquations(new ArrayList<>());
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            File saveFile = new File(JSON_FILE_PATH);
+
             while (true) {
                 Socket socket = server.accept();
 
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                try (BufferedWriter clientIn = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                     BufferedReader clientOut = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-                    JSONObject json = new JSONObject();
-                    int i;
+                    // Загрузить предыдущие записи
+                    History history;
                     try {
-                        json = Server.loadJSONFromFile(new File("Server/src/saveStorage/test.json"));
-                    } catch (FileNotFoundException e) {
-                        System.out.println("Файл не найден");
-                    } catch (JSONException e) {
-                        System.out.println("Не удалось считать JSONObject иза файла");
+                        history = objectMapper.readValue(saveFile, History.class);
+                    } catch (IOException e) {
+                        history = new History();
                     }
-                    if (json.has("lastIndex")) i = json.getInt("lastIndex") + 1;
-                    else i = 1;
 
+                    Equation equation = new Equation();
                     do {
-                        //json.put("lastIndex", i);
-                        history.setLastIndex(i);
-                        Server.sendJSON(writer, json);
                         try {
-                            json = Server.getJSON(reader);
-                            Gson gson = new Gson();
-                            Equation recvEq = gson.fromJson(json.getString("eq"), Equation.class);
-                            //Equation recEq = json.getString("eq");
-                            if (recvEq.getExpression().isEmpty()) {
+                            // Получить арифметическое выражение
+                            equation = objectMapper.readValue(clientOut.readLine(), Equation.class);
+                            if (equation.getExpression().isEmpty()) {
                                 throw new ParserException("Пустая строка");
                             }
-                            //String exp = json.getString("exp" + i);
-                            Equation equation = recvEq;
+
+                            // Посчитать ответ
                             double result = Calc.evaluate(equation.getExpression());
-                            System.out.println(result);
-                            //json.put("result" + i, Double.toString(result));
-                            //Equation equation = new Equation();
-                            //equation.setExpression(exp);
                             equation.setResult(Double.toString(result));
-                            //json.put("eq" + i, equation);
-                            history.getEquations().add(equation);
-                            json.put("eq", gson.toJson(equation));
-                            Server.sendJSON(writer, json);
+                            equation.setError("Ошибок нет");
+
                         } catch (ParserException e) {
-                            json.put("error" + i, "Некорректный ввод");
-                            history.setError("Некорректный ввод");
-                            Server.sendJSON(writer, json);
+                            // Если ответ не посчитан
+                            equation.setError("Некорректный ввод");
                         }
-                        json = Server.getJSON(reader);
-                        json.put("history", history);
-                        Server.saveJSONToFile(json, i);
-                    } while (json.getString("continueCheck" + i++).equals("Y"));
+
+                        // Отправить численный ответ и актуальный индекс
+                        clientIn.write(objectMapper.writeValueAsString(equation));
+                        clientIn.write("\n");
+                        clientIn.flush();
+
+                        // Получить информацию о продолжении
+                        equation = objectMapper.readValue(clientOut.readLine(), Equation.class);
+
+                        // Обновить сохраненнные записи
+                        history.getEquations().add(equation);
+                        history.setLastIndex(history.getLastIndex() + 1);
+                        if (validationCheck(objectMapper.writeValueAsString(history))){
+                            objectMapper.writeValue(saveFile, history);
+                        }
+                    } while (equation.getContinueCheck().equals("Y"));
                 }
             }
         } catch (IOException e) {
@@ -73,32 +70,8 @@ public class Server {
         }
     }
 
-    private static JSONObject getJSON(BufferedReader reader) {
-        try {
-            JSONTokener jsonTokener = new JSONTokener(reader);
-            return new JSONObject(jsonTokener);
-        } catch (JSONException e) {
-            return new JSONObject();
-        }
+    private static boolean validationCheck(String json) {
+        return false;
     }
 
-    private static void sendJSON(BufferedWriter writer, JSONObject json) throws IOException {
-        writer.write(json.toString());
-        writer.newLine();
-        writer.flush();
-    }
-
-    private static void saveJSONToFile(JSONObject json, int i) throws IOException {
-        try (FileWriter saveFile = new FileWriter("Server/src/saveStorage/test.json")) {
-            //json.put("lastIndex", i);
-            saveFile.write(json.get("history").toString());
-        }
-    }
-
-    private static JSONObject loadJSONFromFile(File file) throws IOException, JSONException {
-        try (FileReader loadFile = new FileReader(file)) {
-            BufferedReader reader = new BufferedReader(loadFile);
-            return getJSON(reader);
-        }
-    }
 }
