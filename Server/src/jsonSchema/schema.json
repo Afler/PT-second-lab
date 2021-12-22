@@ -1,35 +1,28 @@
 {
-  "type": "object",
-  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "properties": {
     "expressions": {
       "type": "array",
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "properties": {
           "expression": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "result": {
-            "type": "number",
-            "required": true
+            "type": "string"
           },
           "error": {
-            "type": "number",
-            "required": true
+            "type": "string"
           },
           "continueCheck": {
-            "type": "number",
-            "required": true
+            "type": "string"
           }
         }
       }
     },
     "lastIndex": {
-      "type": "integer",
-      "required": true
+      "type": "integer"
     }
   }
 }

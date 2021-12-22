@@ -1,19 +1,23 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.jimblackler.jsonschemafriend.*;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLOutput;
+import java.util.Scanner;
 
 public class Server {
 
-    private static final String JSON_FILE_PATH = "Server/src/saveStorage/test.json";
+    private static final String JSON_SAVE_FILE_PATH = "C:\\Users\\555\\IdeaProjects\\socketTestApp\\Server\\src\\saveStorage\\save.json";
+    private static final String JSON_SCHEMA_FILE_PATH = "C:\\Users\\555\\IdeaProjects\\socketTestApp\\Server\\src\\jsonSchema\\schema.json";
 
     public static void main(String[] args) {
         try (ServerSocket server = new ServerSocket(8000)) {
             System.out.println("Server started.");
 
             ObjectMapper objectMapper = new ObjectMapper();
-            File saveFile = new File(JSON_FILE_PATH);
+            File saveFile = new File(JSON_SAVE_FILE_PATH);
 
             while (true) {
                 Socket socket = server.accept();
@@ -59,19 +63,42 @@ public class Server {
                         // Обновить сохраненнные записи
                         history.getEquations().add(equation);
                         history.setLastIndex(history.getLastIndex() + 1);
-                        if (validationCheck(objectMapper.writeValueAsString(history))){
+                        if (validationCheck(objectMapper.writeValueAsString(history))) {
                             objectMapper.writeValue(saveFile, history);
+                            System.out.println("Файл сохранен");
+                        } else {
+                            System.out.println("Файл не сохранен, неверный формат");
                         }
                     } while (equation.getContinueCheck().equals("Y"));
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | GenerationException e) {
             e.printStackTrace();
         }
     }
 
-    private static boolean validationCheck(String json) {
-        return false;
+    private static boolean validationCheck(String json) throws IOException, GenerationException {
+        SchemaStore schemaStore = new SchemaStore(); // Initialize a SchemaStore.
+        Schema schema = schemaStore.loadSchemaJson(getSchema());
+        Validator validator = new Validator();
+        try {
+            validator.validateJson(schema, json);
+            return true;
+        } catch (ValidationException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private static String getSchema() throws IOException {
+        FileReader fileReader = new FileReader(JSON_SCHEMA_FILE_PATH);
+        StringBuilder fileContent = new StringBuilder();
+        Scanner scan = new Scanner(fileReader);
+        while (scan.hasNextLine()) {
+            fileContent.append(scan.nextLine());
+        }
+        fileReader.close();
+        return fileContent.toString();
     }
 
 }
