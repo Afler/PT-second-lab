@@ -8,6 +8,17 @@
     <artifactId>Server</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <maven.compiler.release>14</maven.compiler.release>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
@@ -22,8 +33,11 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.13.0</version>
         </dependency>
+        <dependency>
+            <groupId>net.jimblackler.jsonschemafriend</groupId>
+            <artifactId>core</artifactId>
+            <version>0.11.2</version>
+        </dependency>
     </dependencies>
-    <properties>
-        <maven.compiler.release>14</maven.compiler.release>
-    </properties>
+
 </project>
